@@ -1,11 +1,7 @@
-import { put } from '@vercel/blob';
-import { Readable } from 'node:stream';
+const { put } = require('@vercel/blob');
+const { Readable } = require('node:stream');
 
-export const config = {
-  api: { bodyParser: false },
-};
-
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Admin-Password, X-Filename');
@@ -47,4 +43,6 @@ export default async function handler(req, res) {
     console.error('Upload error:', err);
     return res.status(500).json({ error: 'Error al subir el vídeo: ' + err.message });
   }
-}
+};
+
+module.exports.config = { api: { bodyParser: false } };
