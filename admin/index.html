@@ -479,39 +479,20 @@
 
   // En producción: subida directa a Vercel Blob (sin límite de tamaño)
   async function uploadToBlob(pw) {
-    // 1. Pedir token al servidor (aquí se verifica la contraseña)
-    const tokenRes = await fetch(`/api/upload-token?filename=${encodeURIComponent(selectedFile.name)}`, {
-      headers: { 'X-Admin-Password': pw },
-    });
-    if (!tokenRes.ok) {
-      const err = await tokenRes.json();
-      showStatus('error', tokenRes.status === 401 ? 'Contraseña incorrecta.' : (err.error || 'Error al preparar subida.'));
-      return;
-    }
-    const { clientToken } = await tokenRes.json();
-
-    // 2. Subir directamente a Vercel Blob (sin pasar por serverless → sin límite de tamaño)
     const { upload } = await import('https://esm.sh/@vercel/blob@0.27.3/client');
+
     const blob = await upload(`videos/${selectedFile.name}`, selectedFile, {
       access: 'public',
-      token: clientToken,
+      handleUploadUrl: '/api/upload-token',
+      clientPayload: pw,
       multipart: true,
       onUploadProgress: ({ percentage }) => setProgress(Math.round(percentage)),
     });
 
-    // 3. Guardar URL como vídeo activo
-    const setRes = await fetch('/api/set-video', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Admin-Password': pw },
-      body: JSON.stringify({ url: blob.url, filename: selectedFile.name }),
-    });
-
-    if (setRes.ok) {
+    if (blob.url) {
       showStatus('success', '✓ Vídeo actualizado correctamente. Las pantallas lo cargarán en los próximos minutos.');
       resetForm();
       loadCurrentVideo();
-    } else {
-      showStatus('error', 'Vídeo subido pero error al activarlo. Inténtalo de nuevo.');
     }
   }
 
