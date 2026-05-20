@@ -4,8 +4,9 @@ const path = require('path');
 
 const PORT = 5000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
-const CONFIG_FILE = path.join(__dirname, 'config', 'current-video.json');
-const UPLOADS_DIR = path.join(__dirname, 'uploads');
+const CONFIG_FILE  = path.join(__dirname, 'config', 'current-video.json');
+const STATUS_FILE  = path.join(__dirname, 'config', 'status.json');
+const UPLOADS_DIR  = path.join(__dirname, 'uploads');
 
 fs.mkdirSync(path.dirname(CONFIG_FILE), { recursive: true });
 fs.mkdirSync(UPLOADS_DIR, { recursive: true });
@@ -30,6 +31,8 @@ http.createServer((req, res) => {
 
   if (url.pathname === '/api/upload' && req.method === 'POST') return handleUpload(req, res);
   if (url.pathname === '/api/video'  && req.method === 'GET')  return handleVideo(req, res);
+  if (url.pathname === '/api/ping'   && req.method === 'POST') return handlePing(req, res);
+  if (url.pathname === '/api/status' && req.method === 'GET')  return handleStatus(req, res);
 
   serveStatic(req, res, url.pathname);
 
@@ -62,6 +65,38 @@ function handleUpload(req, res) {
   });
 
   out.on('error', (err) => json(res, 500, { error: err.message }));
+}
+
+// ── API /api/ping ────────────────────────────────────────────────────────────
+
+function handlePing(req, res) {
+  let body = '';
+  req.on('data', chunk => body += chunk);
+  req.on('end', () => {
+    try {
+      const { store } = JSON.parse(body);
+      if (!store) return json(res, 400, { error: 'store required' });
+      let status = {};
+      try { status = JSON.parse(fs.readFileSync(STATUS_FILE, 'utf8')); } catch {}
+      status[store] = { lastSeen: new Date().toISOString() };
+      fs.writeFileSync(STATUS_FILE, JSON.stringify(status));
+      json(res, 200, { ok: true });
+    } catch (err) {
+      json(res, 500, { error: err.message });
+    }
+  });
+}
+
+// ── API /api/status ──────────────────────────────────────────────────────────
+
+function handleStatus(req, res) {
+  res.setHeader('Cache-Control', 'no-cache, no-store');
+  try {
+    const data = JSON.parse(fs.readFileSync(STATUS_FILE, 'utf8'));
+    json(res, 200, data);
+  } catch {
+    json(res, 200, {});
+  }
 }
 
 // ── API /api/video ───────────────────────────────────────────────────────────

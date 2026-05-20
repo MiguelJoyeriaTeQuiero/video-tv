@@ -200,6 +200,54 @@
     }
 
     .logout-btn:hover { background: var(--border); color: var(--text); }
+
+    /* STORES STATUS */
+    .stores-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+      gap: 0.55rem;
+      margin-top: 0.5rem;
+    }
+
+    .store-chip {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.7rem;
+      background: var(--cream);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: 0.8rem;
+    }
+
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .dot.online  { background: #22C55E; box-shadow: 0 0 4px #22C55E88; }
+    .dot.away    { background: #F59E0B; }
+    .dot.offline { background: #D1D5DB; }
+
+    .store-name {
+      font-weight: 500; color: var(--text); flex: 1;
+      min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .store-time { font-size: 0.7rem; color: var(--text-muted); white-space: nowrap; }
+
+    .status-footer {
+      margin-top: 0.85rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    #noStores { font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; }
+    #noStores code { background: var(--cream); padding: 0.1em 0.35em; border-radius: 4px; font-size: 0.82em; }
   </style>
 </head>
 <body>
@@ -268,6 +316,20 @@
     <div id="status"></div>
   </div>
 
+  <div class="card" id="statusCard">
+    <h2>Estado de pantallas</h2>
+    <div class="gold-line" style="margin: 0 0 1rem;"></div>
+    <div id="noStores">
+      Ninguna pantalla ha reportado todavía.<br>
+      Añade <code>?store=NombreTienda</code> a la URL de cada pantalla para identificarla.
+    </div>
+    <div id="storesGrid" class="stores-grid" style="display:none;"></div>
+    <div class="status-footer" id="statusFooter" style="display:none;">
+      <span id="statusSummary"></span>
+      <button class="logout-btn" id="refreshBtn" onclick="loadStatus()" style="padding:0.25rem 0.6rem; font-size:0.72rem;">↻ Actualizar</button>
+    </div>
+  </div>
+
   <div style="text-align:center; margin-top:0.25rem;">
     <button class="logout-btn" onclick="logout()">Cerrar sesión</button>
   </div>
@@ -315,6 +377,8 @@
       document.getElementById('loginCard').style.display = 'none';
       document.getElementById('panel').style.display = 'block';
       loadCurrentVideo();
+      loadStatus();
+      setInterval(loadStatus, 60 * 1000);
     } catch {
       document.getElementById('loginError').textContent = 'Error de conexión con el servidor.';
     }
@@ -482,6 +546,66 @@
     el.className = type;
     el.textContent = msg;
     el.style.display = 'block';
+  }
+
+  async function loadStatus() {
+    const btn = document.getElementById('refreshBtn');
+    if (btn) btn.textContent = '…';
+    try {
+      const res = await fetch('/api/status');
+      const data = await res.json();
+      renderStatus(data);
+    } catch { /* ignore */ }
+    if (btn) btn.textContent = '↻ Actualizar';
+  }
+
+  function renderStatus(data) {
+    const entries = Object.entries(data);
+    const grid = document.getElementById('storesGrid');
+    const noStores = document.getElementById('noStores');
+    const footer = document.getElementById('statusFooter');
+    const summary = document.getElementById('statusSummary');
+
+    if (entries.length === 0) {
+      grid.style.display = 'none';
+      noStores.style.display = 'block';
+      footer.style.display = 'none';
+      return;
+    }
+
+    const now = Date.now();
+    let onlineCount = 0;
+
+    grid.innerHTML = entries
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([name, info]) => {
+        const mins = Math.floor((now - new Date(info.lastSeen).getTime()) / 60000);
+        let dotClass, timeStr;
+        if (mins < 10) {
+          dotClass = 'online'; onlineCount++;
+          timeStr = mins < 1 ? 'ahora' : `${mins}m`;
+        } else if (mins < 120) {
+          dotClass = 'away';
+          timeStr = `${mins}m`;
+        } else if (mins < 1440) {
+          dotClass = 'offline';
+          timeStr = `${Math.floor(mins / 60)}h`;
+        } else {
+          dotClass = 'offline';
+          timeStr = `${Math.floor(mins / 1440)}d`;
+        }
+        return `<div class="store-chip">
+          <span class="dot ${dotClass}"></span>
+          <span class="store-name" title="${name}">${name}</span>
+          <span class="store-time">${timeStr}</span>
+        </div>`;
+      })
+      .join('');
+
+    summary.textContent = `${onlineCount} de ${entries.length} activas`;
+    grid.style.display = 'grid';
+    noStores.style.display = 'none';
+    footer.style.display = 'flex';
   }
 </script>
 </body>

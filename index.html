@@ -31,6 +31,7 @@
         const FALLBACK = './assets/VIDEO TV.mp4';
         const POLL_INTERVAL = 5 * 60 * 1000;
         const CACHE_KEY = 'tq_video_url';
+        const STORE_ID = new URLSearchParams(window.location.search).get('store');
         let currentUrl = null;
 
         function playUrl(url) {
@@ -39,6 +40,15 @@
             video.src = url;
             video.load();
             video.play().catch(() => {});
+        }
+
+        function sendPing() {
+            if (!STORE_ID) return;
+            fetch('/api/ping', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ store: STORE_ID }),
+            }).catch(() => {});
         }
 
         async function checkUpdate() {
@@ -50,6 +60,7 @@
                     playUrl(data.url);
                 }
             } catch { /* mantener el vídeo actual */ }
+            sendPing();
         }
 
         // Reproducir inmediatamente desde caché sin esperar la API
