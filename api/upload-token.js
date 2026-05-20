@@ -1,5 +1,3 @@
-const { generateClientTokenFromReadWriteToken } = require('@vercel/blob');
-
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Admin-Password');
@@ -15,6 +13,8 @@ module.exports = async function handler(req, res) {
   const filename = req.query.filename || `video-${Date.now()}.mp4`;
 
   try {
+    const { generateClientTokenFromReadWriteToken } = await import('@vercel/blob/client');
+
     const clientToken = await generateClientTokenFromReadWriteToken({
       token: process.env.BLOB_READ_WRITE_TOKEN,
       pathname: `videos/${filename}`,
