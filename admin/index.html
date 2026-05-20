@@ -477,30 +477,56 @@
     });
   }
 
-  // En producción: subida directa a Vercel Blob (sin límite de tamaño)
+  // En producción: subida en trozos de 3MB (sin límite de tamaño, sin CORS)
   async function uploadToBlob(pw) {
-    const { upload } = await import('https://esm.sh/@vercel/blob@0.27.3/client');
-
+    const CHUNK_SIZE = 3 * 1024 * 1024; // 3 MB
     const safeFilename = selectedFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const uploadId = crypto.randomUUID();
+    const totalParts = Math.ceil(selectedFile.size / CHUNK_SIZE);
 
-    const blob = await upload(`videos/${safeFilename}`, selectedFile, {
-      access: 'public',
-      handleUploadUrl: '/api/upload-token',
-      clientPayload: pw,
-      onUploadProgress: ({ percentage }) => setProgress(Math.round(percentage)),
+    // 1. Subir trozos uno a uno
+    for (let i = 0; i < totalParts; i++) {
+      const start = i * CHUNK_SIZE;
+      const chunk = selectedFile.slice(start, start + CHUNK_SIZE);
+
+      const res = await fetch('/api/upload-chunk', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/octet-stream',
+          'X-Admin-Password': pw,
+          'X-Upload-Id': uploadId,
+          'X-Part-Index': String(i),
+        },
+        body: chunk,
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `Error en trozo ${i + 1}`);
+      }
+
+      setProgress(Math.round(((i + 1) / totalParts) * 90));
+    }
+
+    // 2. Ensamblar en el servidor
+    setProgress(95);
+    document.getElementById('progressText').textContent = 'Ensamblando…';
+
+    const finalRes = await fetch('/api/upload-final', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Password': pw },
+      body: JSON.stringify({ uploadId, filename: safeFilename, totalParts }),
     });
 
-    if (blob.url) {
-      // Guardar como respaldo (el callback de Vercel también lo hace)
-      await fetch('/api/set-video', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Admin-Password': pw },
-        body: JSON.stringify({ url: blob.url, filename: safeFilename }),
-      });
-      showStatus('success', '✓ Vídeo actualizado correctamente. Las pantallas lo cargarán en los próximos minutos.');
-      resetForm();
-      loadCurrentVideo();
+    if (!finalRes.ok) {
+      const err = await finalRes.json().catch(() => ({}));
+      throw new Error(err.error || 'Error al ensamblar el vídeo');
     }
+
+    setProgress(100);
+    showStatus('success', '✓ Vídeo actualizado correctamente. Las pantallas lo cargarán en los próximos minutos.');
+    resetForm();
+    loadCurrentVideo();
   }
 
   function resetForm() {
