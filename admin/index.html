@@ -481,11 +481,12 @@
   async function uploadToBlob(pw) {
     const { upload } = await import('https://esm.sh/@vercel/blob@0.27.3/client');
 
-    const blob = await upload(`videos/${selectedFile.name}`, selectedFile, {
+    const safeFilename = selectedFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+
+    const blob = await upload(`videos/${safeFilename}`, selectedFile, {
       access: 'public',
       handleUploadUrl: '/api/upload-token',
       clientPayload: pw,
-      multipart: true,
       onUploadProgress: ({ percentage }) => setProgress(Math.round(percentage)),
     });
 
