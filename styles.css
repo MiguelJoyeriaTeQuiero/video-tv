@@ -1,0 +1,88 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@200;300;400;500;600;700;800;900;1000&family=Roboto:wght@100;300;400;500;700;900&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+.main {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.prices {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 12vh;
+    z-index: 1;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background: #fff;
+    color: #222
+}
+
+.spetial {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    flex-direction: column;
+}
+
+.used {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: column;
+}
+
+.silver {
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    flex-direction: column;
+}
+
+.metal {
+    font-family: 'nunito', sans-serif;
+    color: aliceblue;
+    font-size: 1.2rem;
+    color: #222
+}
+
+.price {
+    font-family: 'nunito', sans-serif;
+    color: aliceblue;
+    font-size: 1.2rem;
+    font-weight: normal;
+    color: #222
+}
+
+.igic {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    bottom: 0;
+    margin-bottom: 10px;
+    color: #222
+}
+
+.igic h1 {
+    font-size: 0.5rem;
+    color: #fff;
+    font-family: 'nunito';
+    font-weight: normal;
+    color: #222
+}

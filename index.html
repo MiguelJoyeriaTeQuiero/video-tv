@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./styles.css">
+    <title>Precios Te Quiero</title>
+</head>
+
+<body>
+    <div class="main">
+        <video class="video" id="mainVideo" autoplay muted loop playsinline></video>
+        <div class="prices">
+            <div class="spetial">
+                <h1 class="metal">ORO ESPECIAL</h1>
+                <h2 class="price">126,46€/g</h2>
+            </div>
+            <div class="used">
+                <h1 class="metal">ORO OCASIÓN</h1>
+                <h2 class="price">101,91€/g</h2>
+            </div>
+            <div class="igic">
+                <h1>**Los precios indicados no incluyen el 15% de IGIC**</h1>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('mainVideo');
+        const FALLBACK = './assets/VIDEO TV.mp4';
+        const POLL_INTERVAL = 5 * 60 * 1000; // 5 minutos
+        let currentUrl = null;
+
+        async function loadVideo() {
+            try {
+                const res = await fetch('/api/video');
+                const data = await res.json();
+                const newUrl = data.url || FALLBACK;
+                if (newUrl !== currentUrl) {
+                    currentUrl = newUrl;
+                    video.src = newUrl;
+                    video.load();
+                    video.play().catch(() => {});
+                }
+            } catch {
+                if (!currentUrl) {
+                    currentUrl = FALLBACK;
+                    video.src = FALLBACK;
+                    video.load();
+                    video.play().catch(() => {});
+                }
+            }
+        }
+
+        loadVideo();
+        setInterval(loadVideo, POLL_INTERVAL);
+    </script>
+</body>
+
+</html>

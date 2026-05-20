@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Te Quiero · Panel de Vídeo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold: #C9A84C;
+      --gold-light: #E8D5A0;
+      --gold-dark: #9A7530;
+      --bg: #111;
+      --surface: #1A1A1A;
+      --surface2: #252525;
+      --text: #F0EAD6;
+      --text-muted: #888;
+      --success: #4CAF50;
+      --error: #E57373;
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      color: var(--gold);
+    }
+
+    header p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.3rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid #2A2A2A;
+      border-radius: 16px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 520px;
+      margin-bottom: 1.5rem;
+    }
+
+    .card h2 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--gold);
+      margin-bottom: 1.2rem;
+      font-weight: 700;
+    }
+
+    /* LOGIN */
+    #loginCard { text-align: center; }
+
+    #loginCard p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    input[type="password"] {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="password"]:focus { border-color: var(--gold); }
+
+    button {
+      background: var(--gold);
+      color: #111;
+      border: none;
+      border-radius: 8px;
+      padding: 0.7rem 1.4rem;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    button:hover { background: var(--gold-light); }
+    button:active { transform: scale(0.97); }
+    button:disabled { background: #444; color: #777; cursor: not-allowed; }
+
+    .error-msg {
+      margin-top: 0.75rem;
+      color: var(--error);
+      font-size: 0.85rem;
+    }
+
+    /* CURRENT VIDEO */
+    #currentInfo {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    #currentInfo .filename {
+      font-weight: 700;
+      color: var(--gold-light);
+      word-break: break-all;
+    }
+
+    #currentInfo .date {
+      margin-top: 0.3rem;
+    }
+
+    #noVideo {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    /* DROP ZONE */
+    #dropZone {
+      border: 2px dashed #333;
+      border-radius: 12px;
+      padding: 3rem 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+    }
+
+    #dropZone.dragover {
+      border-color: var(--gold);
+      background: rgba(201, 168, 76, 0.06);
+    }
+
+    #dropZone.has-file {
+      border-color: var(--gold-dark);
+      background: rgba(201, 168, 76, 0.04);
+    }
+
+    #dropZone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .drop-icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.75rem;
+      display: block;
+    }
+
+    .drop-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.3rem;
+    }
+
+    .drop-sub {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    #fileInfo {
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      color: var(--gold-light);
+      font-weight: 600;
+      display: none;
+    }
+
+    /* PROGRESS */
+    #progressWrap {
+      display: none;
+      margin-top: 1.5rem;
+    }
+
+    #progressLabel {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    #progressBar {
+      height: 6px;
+      background: #2A2A2A;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    #progressFill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold-dark), var(--gold));
+      border-radius: 99px;
+      width: 0%;
+      transition: width 0.15s ease;
+    }
+
+    /* UPLOAD BUTTON */
+    #uploadBtn {
+      width: 100%;
+      margin-top: 1.5rem;
+      padding: 0.9rem;
+      font-size: 1rem;
+      letter-spacing: 0.05em;
+      display: none;
+    }
+
+    /* STATUS */
+    #status {
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      display: none;
+    }
+
+    #status.success {
+      background: rgba(76, 175, 80, 0.12);
+      border: 1px solid rgba(76, 175, 80, 0.3);
+      color: #81C784;
+    }
+
+    #status.error {
+      background: rgba(229, 115, 115, 0.12);
+      border: 1px solid rgba(229, 115, 115, 0.3);
+      color: var(--error);
+    }
+
+    /* GOLD DIVIDER */
+    .divider {
+      width: 40px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      margin: 0.5rem auto 0;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>TE QUIERO</h1>
+  <div class="divider"></div>
+  <p>Panel de gestión de vídeo</p>
+</header>
+
+<!-- LOGIN -->
+<div class="card" id="loginCard">
+  <h2>Acceso</h2>
+  <p>Introduce la contraseña para gestionar el vídeo de las tiendas.</p>
+  <div class="input-row">
+    <input type="password" id="passwordInput" placeholder="Contraseña" autocomplete="current-password">
+    <button id="loginBtn" onclick="login()">Entrar</button>
+  </div>
+  <div class="error-msg" id="loginError"></div>
+</div>
+
+<!-- PANEL (oculto hasta login) -->
+<div id="panel" style="display:none; width:100%; max-width:520px;">
+
+  <!-- Estado actual -->
+  <div class="card">
+    <h2>Vídeo actual en tiendas</h2>
+    <div id="currentInfo" style="display:none;">
+      <div>Fichero: <span class="filename" id="currentFilename"></span></div>
+      <div class="date">Actualizado: <span id="currentDate"></span></div>
+    </div>
+    <div id="noVideo">No hay ningún vídeo subido todavía.</div>
+  </div>
+
+  <!-- Subir vídeo -->
+  <div class="card">
+    <h2>Subir nuevo vídeo</h2>
+
+    <div id="dropZone">
+      <input type="file" id="fileInput" accept="video/mp4,video/webm,video/quicktime" onchange="onFileSelected(this.files[0])">
+      <span class="drop-icon">🎬</span>
+      <div class="drop-title">Arrastra el vídeo aquí</div>
+      <div class="drop-sub">o haz clic para seleccionar · MP4, MOV, WebM</div>
+    </div>
+
+    <div id="fileInfo"></div>
+
+    <div id="progressWrap">
+      <div id="progressLabel">
+        <span id="progressText">Subiendo…</span>
+        <span id="progressPct">0%</span>
+      </div>
+      <div id="progressBar"><div id="progressFill"></div></div>
+    </div>
+
+    <button id="uploadBtn" onclick="uploadVideo()">Subir y activar en tiendas</button>
+    <div id="status"></div>
+  </div>
+
+  <div style="text-align:center; margin-top:0.5rem;">
+    <button style="background:transparent; color:var(--text-muted); font-size:0.8rem; padding:0.4rem 0.8rem;" onclick="logout()">Cerrar sesión</button>
+  </div>
+
+</div>
+
+<script>
+  const SESSION_KEY = 'tq_admin_pass';
+  let selectedFile = null;
+  let storedPassword = sessionStorage.getItem(SESSION_KEY);
+
+  // Auto-login si hay sesión guardada
+  if (storedPassword) tryShowPanel(storedPassword);
+
+  // DRAG & DROP
+  const dropZone = document.getElementById('dropZone');
+  dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) onFileSelected(file);
+  });
+
+  document.getElementById('passwordInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') login();
+  });
+
+  function login() {
+    const pw = document.getElementById('passwordInput').value.trim();
+    if (!pw) return;
+    tryShowPanel(pw);
+  }
+
+  async function tryShowPanel(pw) {
+    // Verificar contraseña intentando una llamada real
+    try {
+      const res = await fetch('/api/video');
+      // Si responde, intentamos con la contraseña
+      // (la verificación real ocurre al subir; aquí solo comprobamos
+      // que el server responde y guardamos la sesión)
+      storedPassword = pw;
+      sessionStorage.setItem(SESSION_KEY, pw);
+      document.getElementById('loginCard').style.display = 'none';
+      document.getElementById('panel').style.display = 'block';
+      loadCurrentVideo();
+    } catch {
+      document.getElementById('loginError').textContent = 'Error de conexión con el servidor.';
+    }
+  }
+
+  function logout() {
+    sessionStorage.removeItem(SESSION_KEY);
+    storedPassword = null;
+    document.getElementById('loginCard').style.display = 'block';
+    document.getElementById('panel').style.display = 'none';
+    document.getElementById('passwordInput').value = '';
+  }
+
+  async function loadCurrentVideo() {
+    try {
+      const res = await fetch('/api/video');
+      const data = await res.json();
+      if (data.url) {
+        document.getElementById('currentInfo').style.display = 'block';
+        document.getElementById('noVideo').style.display = 'none';
+        document.getElementById('currentFilename').textContent = data.filename || data.url.split('/').pop();
+        document.getElementById('currentDate').textContent = data.updatedAt
+          ? new Date(data.updatedAt).toLocaleString('es-ES')
+          : '—';
+      } else {
+        document.getElementById('currentInfo').style.display = 'none';
+        document.getElementById('noVideo').style.display = 'block';
+      }
+    } catch { /* ignore */ }
+  }
+
+  function onFileSelected(file) {
+    if (!file || !file.type.startsWith('video/')) {
+      showStatus('error', 'Selecciona un fichero de vídeo válido (MP4, MOV, WebM).');
+      return;
+    }
+    selectedFile = file;
+    dropZone.classList.add('has-file');
+    const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+    const fileInfo = document.getElementById('fileInfo');
+    fileInfo.textContent = `📎 ${file.name} · ${sizeMB} MB`;
+    fileInfo.style.display = 'block';
+    document.getElementById('uploadBtn').style.display = 'block';
+    document.getElementById('status').style.display = 'none';
+  }
+
+  function uploadVideo() {
+    if (!selectedFile) return;
+
+    const pw = storedPassword || sessionStorage.getItem(SESSION_KEY);
+    if (!pw) { logout(); return; }
+
+    const btn = document.getElementById('uploadBtn');
+    btn.disabled = true;
+    btn.textContent = 'Subiendo…';
+
+    document.getElementById('progressWrap').style.display = 'block';
+    document.getElementById('status').style.display = 'none';
+    setProgress(0);
+
+    const xhr = new XMLHttpRequest();
+
+    xhr.upload.addEventListener('progress', (e) => {
+      if (e.lengthComputable) {
+        setProgress(Math.round((e.loaded / e.total) * 100));
+      }
+    });
+
+    xhr.addEventListener('load', () => {
+      btn.disabled = false;
+      btn.textContent = 'Subir y activar en tiendas';
+      document.getElementById('progressWrap').style.display = 'none';
+
+      if (xhr.status === 200) {
+        showStatus('success', '✓ Vídeo actualizado correctamente. Las pantallas lo cargarán en los próximos minutos.');
+        selectedFile = null;
+        dropZone.classList.remove('has-file');
+        document.getElementById('fileInfo').style.display = 'none';
+        document.getElementById('uploadBtn').style.display = 'none';
+        const fileInput = document.getElementById('fileInput');
+        fileInput.value = '';
+        loadCurrentVideo();
+      } else {
+        let msg = 'Error al subir el vídeo.';
+        try { msg = JSON.parse(xhr.responseText).error || msg; } catch { /* */ }
+        if (xhr.status === 401) msg = 'Contraseña incorrecta. Cierra sesión y vuelve a entrar.';
+        showStatus('error', msg);
+      }
+    });
+
+    xhr.addEventListener('error', () => {
+      btn.disabled = false;
+      btn.textContent = 'Subir y activar en tiendas';
+      document.getElementById('progressWrap').style.display = 'none';
+      showStatus('error', 'Error de red. Comprueba tu conexión.');
+    });
+
+    xhr.open('POST', '/api/upload');
+    xhr.setRequestHeader('X-Admin-Password', pw);
+    xhr.setRequestHeader('X-Filename', selectedFile.name);
+    xhr.setRequestHeader('Content-Type', selectedFile.type);
+    xhr.send(selectedFile);
+  }
+
+  function setProgress(pct) {
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressPct').textContent = pct + '%';
+    document.getElementById('progressText').textContent = pct < 100 ? 'Subiendo…' : 'Procesando…';
+  }
+
+  function showStatus(type, msg) {
+    const el = document.getElementById('status');
+    el.className = type;
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+</script>
+</body>
+</html>
