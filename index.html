@@ -29,32 +29,40 @@
     <script>
         const video = document.getElementById('mainVideo');
         const FALLBACK = './assets/VIDEO TV.mp4';
-        const POLL_INTERVAL = 5 * 60 * 1000; // 5 minutos
+        const POLL_INTERVAL = 5 * 60 * 1000;
+        const CACHE_KEY = 'tq_video_url';
         let currentUrl = null;
 
-        async function loadVideo() {
+        function playUrl(url) {
+            if (url === currentUrl) return;
+            currentUrl = url;
+            video.src = url;
+            video.load();
+            video.play().catch(() => {});
+        }
+
+        async function checkUpdate() {
             try {
                 const res = await fetch('/api/video');
                 const data = await res.json();
-                const newUrl = data.url || FALLBACK;
-                if (newUrl !== currentUrl) {
-                    currentUrl = newUrl;
-                    video.src = newUrl;
-                    video.load();
-                    video.play().catch(() => {});
+                if (data.url) {
+                    localStorage.setItem(CACHE_KEY, data.url);
+                    playUrl(data.url);
                 }
-            } catch {
-                if (!currentUrl) {
-                    currentUrl = FALLBACK;
-                    video.src = FALLBACK;
-                    video.load();
-                    video.play().catch(() => {});
-                }
-            }
+            } catch { /* mantener el vídeo actual */ }
         }
 
-        loadVideo();
-        setInterval(loadVideo, POLL_INTERVAL);
+        // Reproducir inmediatamente desde caché sin esperar la API
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (cached) {
+            playUrl(cached);
+        } else {
+            playUrl(FALLBACK);
+        }
+
+        // Comprobar actualizaciones en segundo plano
+        checkUpdate();
+        setInterval(checkUpdate, POLL_INTERVAL);
     </script>
 </body>
 

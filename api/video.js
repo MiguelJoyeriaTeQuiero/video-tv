@@ -1,5 +1,3 @@
-const { list } = require('@vercel/blob');
-
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -7,14 +5,17 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).end();
 
   try {
-    const { blobs } = await list({ prefix: 'config/' });
-    const configBlob = blobs.find((b) => b.pathname === 'config/current-video.json');
+    // Construir URL directa desde el store ID (evita list() que es lento)
+    const token = process.env.BLOB_READ_WRITE_TOKEN || '';
+    const storeId = token.split('_')[3];
 
-    if (!configBlob) {
+    if (!storeId) {
       return res.status(200).json({ url: null });
     }
 
-    const response = await fetch(`${configBlob.url}?t=${Date.now()}`);
+    const configUrl = `https://${storeId}.public.blob.vercel-storage.com/config/current-video.json`;
+    const response = await fetch(`${configUrl}?t=${Date.now()}`);
+
     if (!response.ok) return res.status(200).json({ url: null });
 
     const data = await response.json();
