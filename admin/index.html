@@ -491,6 +491,12 @@
     });
 
     if (blob.url) {
+      // Guardar como respaldo (el callback de Vercel también lo hace)
+      await fetch('/api/set-video', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Password': pw },
+        body: JSON.stringify({ url: blob.url, filename: safeFilename }),
+      });
       showStatus('success', '✓ Vídeo actualizado correctamente. Las pantallas lo cargarán en los próximos minutos.');
       resetForm();
       loadCurrentVideo();
